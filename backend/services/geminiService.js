@@ -1,0 +1,47 @@
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+require('dotenv').config();
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+async function generateEHRSummary(extractedText, summaryType = 'general') {
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const prompts = {
+      // general: `Please provide a comprehensive medical summary of the following healthcare document. Include key diagnoses, treatments, medications, and important findings. Format the summary for a healthcare provider:`,
+      general: `You are a medical document summarizer.
+
+Read the following document and summarize ONLY the medically relevant content.
+
+Your response must always be structured under these headings:
+- Diagnosis
+- Treatment
+- Medications
+- Precautions
+
+If a section is missing or not applicable, write "Not mentioned".
+
+If the document is not medical, respond with:
+"This document does not contain relevant medical information."
+
+Document:
+${text}
+
+`,
+      clinical: `Generate a clinical summary highlighting findings, diagnostic results, treatment plans, and recommendations:`
+    };
+    const prompt = `${prompts[summaryType] || prompts.general}\n\n${extractedText}`;
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const summary = response.text();
+
+    return {
+      success: true,
+      summary,
+      summaryType
+    };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+module.exports = { generateEHRSummary };
