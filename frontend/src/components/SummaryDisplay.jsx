@@ -23,6 +23,29 @@ function SummaryDisplay({ result = {} }) {
     if (confidence >= 85) return <CheckCircle className="w-5 h-5" />;
     return <AlertCircle className="w-5 h-5" />;
   };
+const handleExport = () => {
+  const blob = new Blob([summary || extractedText || "No content"], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'medical-summary.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+const handleShare = async () => {
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: 'Medical Summary',
+        text: summary || 'No summary available',
+      });
+    } else {
+      alert("Sharing not supported in this browser.");
+    }
+  } catch (err) {
+    console.error("Share failed:", err);
+  }
+};
 
   const formatSummaryText = (text) => {
     if (!text) return [<p key="0" className="text-gray-500">No summary text available</p>];
@@ -91,14 +114,22 @@ function SummaryDisplay({ result = {} }) {
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <button className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition-colors">
-                <Download className="w-4 h-4" />
-                <span className="hidden sm:inline">Export</span>
-              </button>
-              <button className="flex items-center space-x-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 rounded-lg text-blue-700 transition-colors">
-                <Share2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Share</span>
-              </button>
+              <button 
+  onClick={handleExport} 
+  className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition-colors"
+>
+  <Download className="w-4 h-4" />
+  <span className="hidden sm:inline">Export</span>
+</button>
+
+<button 
+  onClick={handleShare} 
+  className="flex items-center space-x-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 rounded-lg text-blue-700 transition-colors"
+>
+  <Share2 className="w-4 h-4" />
+  <span className="hidden sm:inline">Share</span>
+</button>
+
             </div>
           </div>
         </div>
